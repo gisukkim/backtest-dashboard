@@ -1,0 +1,73 @@
+name: Daily Backtest Report
+
+# ────────────────────────────────────────────────────────
+#  매일 KST 09:00 (= UTC 00:00) 에 백테스트 실행
+#  Settings > Actions > Workflow permissions 에서
+#  "Read and write permissions" 를 선택해야 합니다.
+# ────────────────────────────────────────────────────────
+
+on:
+  schedule:
+    - cron: '0 0 * * *'   # UTC 00:00 = KST 09:00
+  workflow_dispatch:       # 수동 실행 버튼 활성화
+
+permissions:
+  contents: write   # docs/ 결과물을 레포에 커밋하기 위해 필요
+
+jobs:
+  update-report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60   # 최대 60분 (데이터 다운로드 포함)
+
+    steps:
+      # 1. 레포 체크아웃
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Python 3.11 설정
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # 3. pip 캐시 (패키지 재설치 속도 향상)
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-pandas-matplotlib-requests
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      # 4. Binance API 데이터 캐시 (7일치 데이터를 재사용해 실행 시간 단축)
+      - name: Restore Binance data cache
+        uses: actions/cache@v4
+        with:
+          path: binance_cache
+          key: binance-data-${{ github.run_id }}
+          restore-keys: |
+            binance-data-
+
+      # 5. 의존성 설치
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
+          pip install pandas numpy matplotlib requests
+
+      # 6. 백테스트 리포트 생성
+      - name: Run backtest report
+        run: python generate_report.py
+
+      # 7. 결과를 레포에 커밋 & 푸시
+      - name: Commit and push updated report
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/
+          # 변경사항이 있을 때만 커밋 (없으면 스킵)
+          if git diff --staged --quiet; then
+            echo "변경사항 없음 — 커밋 스킵"
+          else
+            git commit -m "chore: update backtest report $(date -u '+%Y-%m-%d %H:%M UTC')"
+            git push
+          fi

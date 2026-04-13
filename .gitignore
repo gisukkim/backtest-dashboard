@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# Binance API 다운로드 캐시 (레포에 포함하지 않음 — GitHub Actions가 캐시로 관리)
+binance_cache/
+
+# 로컬 데이터 캐시 (92MB CSV 715개 — GitHub Actions가 Binance API로 재다운로드)
+data_cache/
+
+# Claude IDE 설정
+.claude/
+
+# 로컬 결과물 CSV
+binance_short_fixed_final_*.csv
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# 로컬 백테스트 결과물 (~/Downloads에 저장되는 날짜태그 파일들)
+backtest_4h_*.png
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 환경 변수 / 비밀 키 (절대 커밋 금지)
+.env
+*.key
+secrets.json
