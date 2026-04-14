@@ -80,11 +80,10 @@ def main():
     print("=" * 60)
     start_time = datetime.now()
 
-    # ── API 연결 확인 ──────────────────────────────────────────────────────────
+    # ── API 연결 확인 (차단 시 Bybit 폴백으로 계속 진행) ─────────────────────
     if not _check_api_connectivity():
-        print("\n  ❌ Binance Futures API에 접근할 수 없습니다.")
-        print("     GitHub Actions 서버에서 fapi.binance.com이 차단되었을 수 있습니다.")
-        sys.exit(1)
+        print("\n  ⚠  Binance Futures API 차단됨 → Bybit API 폴백으로 계속 진행합니다.")
+        print("     (GitHub Actions 서버는 fapi.binance.com이 차단될 수 있습니다)")
 
     # ── 데이터 로드 ────────────────────────────────────────────────────────────
     print("\n[1/3] 데이터 로드 중...")
