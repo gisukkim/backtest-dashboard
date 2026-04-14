@@ -31,8 +31,8 @@ USE_REAL_FUNDING = True    # True: 바이낸스 실제 펀딩비 사용
 
 MIN_DATA_DAYS = 365
 
-# 포트폴리오 초기 자본
-BITGET_CAPITAL = 10000.0
+# 포트폴리오 초기 자본 (두 봇 동일 기준으로 비교)
+BITGET_CAPITAL = 100000.0
 BINANCE_CAPITAL = 100000.0
 
 SAVE_DIR = os.path.expanduser("~/Downloads")
@@ -114,39 +114,8 @@ def _fetch_binance_funding_rates(symbol, silent):
     return df[['timestamp', 'funding_rate']].sort_values('timestamp').drop_duplicates(subset=['timestamp']).reset_index(drop=True)
 
 
-def _fetch_bybit_funding_rates(symbol, silent):
-    """Bybit에서 펀딩비 다운로드 (Binance 폴백)"""
-    url = "https://api.bybit.com/v5/market/funding/history"
-    all_rows = []
-    end_time = int(datetime.utcnow().timestamp() * 1000)
-    for _ in range(200):
-        params = {'category': 'linear', 'symbol': symbol, 'limit': 200, 'endTime': end_time}
-        try:
-            response = requests.get(url, params=params, timeout=15)
-            if response.status_code == 429:
-                time.sleep(2); continue
-            if response.status_code != 200:
-                break
-            rows = response.json().get('result', {}).get('list', [])
-            if not rows:
-                break
-            all_rows = rows + all_rows
-            if len(rows) < 200:
-                break
-            end_time = int(rows[-1]['fundingRateTimestamp']) - 1
-            time.sleep(0.1)
-        except:
-            break
-    if not all_rows:
-        return pd.DataFrame()
-    df = pd.DataFrame(all_rows)
-    df['timestamp'] = pd.to_datetime(df['fundingRateTimestamp'].astype(int), unit='ms')
-    df['funding_rate'] = df['fundingRate'].astype(float)
-    return df[['timestamp', 'funding_rate']].sort_values('timestamp').drop_duplicates(subset=['timestamp']).reset_index(drop=True)
-
-
 def get_funding_rates(symbol, silent=False):
-    """펀딩비 히스토리 다운로드 (Binance → Bybit 폴백, 캐시 지원)"""
+    """펀딩비 히스토리 다운로드 (Binance 시도, 차단 시 상수 폴백 사용, 캐시 지원)"""
     cache_file = os.path.join(CACHE_DIR, f"{symbol}_funding.csv")
     if os.path.exists(cache_file):
         mod_time = datetime.fromtimestamp(os.path.getmtime(cache_file))
@@ -154,12 +123,9 @@ def get_funding_rates(symbol, silent=False):
             return pd.read_csv(cache_file, parse_dates=['timestamp'])
 
     df = _fetch_binance_funding_rates(symbol, silent)
-    if df.empty:
-        if not silent:
-            print(f"    Binance 펀딩비 실패 → Bybit 폴백: {symbol}")
-        df = _fetch_bybit_funding_rates(symbol, silent)
     if not df.empty:
         df.to_csv(cache_file, index=False)
+    # df가 비어 있으면 map_funding_to_4h에서 상수 폴백(FUNDING_RATE_8H * 0.5)이 사용됨
     return df
 
 
@@ -219,40 +185,39 @@ def _fetch_binance_klines(symbol, interval, silent):
     return df[['timestamp', 'open', 'high', 'low', 'close', 'volume']].sort_values('timestamp').drop_duplicates(subset=['timestamp']).reset_index(drop=True)
 
 
-def _fetch_bybit_klines(symbol, interval, silent):
-    """Bybit Linear Futures에서 캔들 다운로드 (Binance 폴백)"""
-    interval_map = {'1h': '60', '4h': '240', '1d': 'D'}
-    bybit_interval = interval_map.get(interval, '240')
-    url = "https://api.bybit.com/v5/market/kline"
-    all_rows = []
+def _fetch_binanceus_klines(symbol, interval, silent):
+    """Binance.US (api.binance.us) 스팟 캔들 다운로드 (GitHub Actions US 서버 접근 가능)"""
+    url = "https://api.binance.us/api/v3/klines"
+    all_data = []
     end_time = int(datetime.utcnow().timestamp() * 1000)
-    for _ in range(150):
-        params = {
-            'category': 'linear', 'symbol': symbol,
-            'interval': bybit_interval, 'limit': 1000, 'end': end_time,
-        }
+    for _ in range(100):
+        params = {'symbol': symbol, 'interval': interval, 'limit': 1000, 'endTime': end_time}
         try:
             response = requests.get(url, params=params, timeout=15)
             if response.status_code == 429:
-                time.sleep(2); continue
+                time.sleep(1); continue
             if response.status_code != 200:
+                return pd.DataFrame()
+            data = response.json()
+            if not data or not isinstance(data, list):
                 break
-            rows = response.json().get('result', {}).get('list', [])
-            if not rows:
+            all_data = data + all_data
+            if len(data) < 1000:
                 break
-            all_rows = rows + all_rows  # Bybit는 최신순 → 앞에 붙여 오래된 순 유지
-            if len(rows) < 1000:
-                break
-            end_time = int(rows[-1][0]) - 1
+            end_time = data[0][0] - 1
             time.sleep(0.1)
         except Exception as e:
             if not silent:
-                print(f"    Bybit 오류: {e}")
-            break
-    if not all_rows:
+                print(f"    Binance.US 오류: {e}")
+            return pd.DataFrame()
+    if not all_data:
         return pd.DataFrame()
-    df = pd.DataFrame(all_rows, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume', 'turnover'])
-    df['timestamp'] = pd.to_datetime(df['timestamp'].astype(int), unit='ms')
+    df = pd.DataFrame(all_data, columns=[
+        'timestamp', 'open', 'high', 'low', 'close', 'volume',
+        'close_time', 'quote_volume', 'trades', 'taker_buy_volume',
+        'taker_buy_quote', 'ignore'
+    ])
+    df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
     for col in ['open', 'high', 'low', 'close', 'volume']:
         df[col] = df[col].astype(float)
     return df[['timestamp', 'open', 'high', 'low', 'close', 'volume']].sort_values('timestamp').drop_duplicates(subset=['timestamp']).reset_index(drop=True)
@@ -271,8 +236,8 @@ def get_binance_futures_klines(symbol, interval='4h', silent=False):
     df = _fetch_binance_klines(symbol, interval, silent)
     if df.empty:
         if not silent:
-            print(f"    Binance 차단됨 → Bybit 폴백: {symbol} ({interval})")
-        df = _fetch_bybit_klines(symbol, interval, silent)
+            print(f"    Binance 차단됨 → Binance.US 폴백: {symbol} ({interval})")
+        df = _fetch_binanceus_klines(symbol, interval, silent)
     if not df.empty:
         df.to_csv(cache_file, index=False)
     return df
