@@ -57,11 +57,34 @@ CHART_FILES = {
 }
 
 
+def _check_api_connectivity():
+    """Binance Futures API 접근 가능 여부 사전 확인"""
+    import requests as _req
+    url = "https://fapi.binance.com/fapi/v1/ping"
+    try:
+        r = _req.get(url, timeout=10)
+        if r.status_code == 200:
+            print("  [API] fapi.binance.com 접근 OK")
+            return True
+        else:
+            print(f"  [API] fapi.binance.com 응답 이상: HTTP {r.status_code}")
+            return False
+    except Exception as e:
+        print(f"  [API] fapi.binance.com 접근 실패: {e}")
+        return False
+
+
 def main():
     print("=" * 60)
     print("  백테스트 리포트 생성 (GitHub Pages용)")
     print("=" * 60)
     start_time = datetime.now()
+
+    # ── API 연결 확인 ──────────────────────────────────────────────────────────
+    if not _check_api_connectivity():
+        print("\n  ❌ Binance Futures API에 접근할 수 없습니다.")
+        print("     GitHub Actions 서버에서 fapi.binance.com이 차단되었을 수 있습니다.")
+        sys.exit(1)
 
     # ── 데이터 로드 ────────────────────────────────────────────────────────────
     print("\n[1/3] 데이터 로드 중...")
@@ -69,10 +92,16 @@ def main():
     bitget_cache = {}
     for cfg in BITGET_CONFIGS:
         sym = cfg["symbol"]
-        data = prepare_coin_data(sym, silent=True)
+        data = prepare_coin_data(sym, silent=False)
         if data:
             bitget_cache[sym] = data
+        else:
+            print(f"  ⚠  {sym} 로드 실패 (데이터 부족 또는 API 오류)")
     print(f"  Bitget: {len(bitget_cache)} 코인 로드")
+
+    if len(bitget_cache) == 0:
+        print("  ❌ Bitget 코인 데이터를 하나도 로드하지 못했습니다. API 접근 문제를 확인하세요.")
+        sys.exit(1)
 
     short_configs, long_configs = load_binance_configs()
     if not short_configs and not long_configs:
@@ -84,19 +113,29 @@ def main():
     all_symbols = (
         {c["symbol"] for c in short_configs} | {c["symbol"] for c in long_configs}
     )
+    fail_count = 0
     for i, sym in enumerate(sorted(all_symbols), 1):
         if i % 20 == 0:
-            print(f"  Binance 진행: {i}/{len(all_symbols)}...")
+            print(f"  Binance 진행: {i}/{len(all_symbols)} (로드 성공: {len(binance_cache)}, 실패: {fail_count})...")
         data = prepare_coin_data(sym, silent=True)
         if data:
             binance_cache[sym] = data
-    print(f"  Binance: {len(binance_cache)} 코인 로드")
+        else:
+            fail_count += 1
+    print(f"  Binance: {len(binance_cache)} 코인 로드 (실패: {fail_count})")
+
+    if len(binance_cache) == 0:
+        print("  ❌ Binance 코인 데이터를 하나도 로드하지 못했습니다.")
+        sys.exit(1)
 
     # ── 공통 종료일 ────────────────────────────────────────────────────────────
     all_ends = [
         d["df_4h"]["timestamp"].max()
         for d in list(bitget_cache.values()) + list(binance_cache.values())
     ]
+    if not all_ends:
+        print("  ❌ 데이터가 없어 종료일을 계산할 수 없습니다.")
+        sys.exit(1)
     end_date = min(all_ends)
     print(f"  공통 종료일: {end_date}")
 
