@@ -5,22 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>4H 백테스트 대시보드</title>
   <style>
-    /* ── 기본 리셋 ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:        #0f1117;
-      --surface:   #1a1d27;
-      --surface2:  #232736;
-      --border:    #2e3248;
-      --text:      #e2e8f0;
-      --muted:     #8892a4;
-      --blue:      #2196F3;
-      --orange:    #FF5722;
-      --green:     #22c55e;
-      --red:       #ef4444;
-      --yellow:    #eab308;
-      --radius:    12px;
+      --bg:       #0f1117;
+      --surface:  #1a1d27;
+      --surface2: #232736;
+      --border:   #2e3248;
+      --text:     #e2e8f0;
+      --muted:    #8892a4;
+      --blue:     #2196F3;
+      --orange:   #FF5722;
+      --green:    #22c55e;
+      --red:      #ef4444;
+      --yellow:   #eab308;
+      --radius:   12px;
     }
 
     body {
@@ -42,8 +41,8 @@
       flex-wrap: wrap;
       gap: 12px;
     }
-    .header-title { display: flex; align-items: center; gap: 14px; }
-    .header-title h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px; }
+    .header-left { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .header-left h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px; }
     .badge {
       background: var(--surface2);
       border: 1px solid var(--border);
@@ -54,14 +53,13 @@
     }
     #update-info { text-align: right; }
     #update-info .label { font-size: 0.75rem; color: var(--muted); }
-    #update-info .time { font-size: 0.9rem; font-weight: 600; color: var(--text); }
+    #update-info .time  { font-size: 0.9rem; font-weight: 600; color: var(--text); }
 
-    /* ── 메인 레이아웃 ── */
+    /* ── 메인 ── */
     main { max-width: 1400px; margin: 0 auto; padding: 32px 24px; }
 
-    /* ── 섹션 제목 ── */
     .section-title {
-      font-size: 1rem;
+      font-size: 0.85rem;
       font-weight: 600;
       color: var(--muted);
       text-transform: uppercase;
@@ -71,7 +69,19 @@
       border-bottom: 1px solid var(--border);
     }
 
-    /* ── 스탯 카드 그리드 ── */
+    /* ── 공지 ── */
+    .notice {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--yellow);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 32px;
+    }
+
+    /* ── 스탯 카드 ── */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -85,16 +95,16 @@
       padding: 20px;
       position: relative;
       overflow: hidden;
-      transition: transform 0.15s, box-shadow 0.15s;
+      transition: transform .15s, box-shadow .15s;
     }
-    .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.3); }
     .stat-card::before {
       content: '';
       position: absolute;
       top: 0; left: 0; right: 0;
       height: 3px;
     }
-    .stat-card.blue::before  { background: var(--blue); }
+    .stat-card.blue::before   { background: var(--blue); }
     .stat-card.orange::before { background: var(--orange); }
     .stat-label { font-size: 0.75rem; color: var(--muted); margin-bottom: 8px; }
     .stat-value { font-size: 1.8rem; font-weight: 700; line-height: 1; }
@@ -103,16 +113,11 @@
     .stat-value.neutral  { color: var(--text); }
     .stat-sub { font-size: 0.78rem; color: var(--muted); margin-top: 6px; }
 
-    /* ── 차트 그리드 ── */
+    /* ── 차트 ── */
     .chart-section { margin-bottom: 40px; }
     .chart-grid-2 {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(min(100%, 640px), 1fr));
-      gap: 20px;
-    }
-    .chart-grid-3 {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr));
       gap: 20px;
     }
     .chart-card {
@@ -120,9 +125,9 @@
       border: 1px solid var(--border);
       border-radius: var(--radius);
       overflow: hidden;
-      transition: transform 0.15s, box-shadow 0.15s;
+      transition: transform .15s, box-shadow .15s;
     }
-    .chart-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+    .chart-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.3); }
     .chart-card.full { grid-column: 1 / -1; }
     .chart-card-header {
       padding: 14px 20px;
@@ -137,46 +142,20 @@
     .dot.purple { background: #9c27b0; }
     .dot.green  { background: var(--green); }
     .chart-card-header span { font-size: 0.88rem; font-weight: 600; }
-    .chart-card img {
-      width: 100%;
-      display: block;
-      background: var(--surface2);
-      min-height: 160px;
-    }
-    /* 이미지 로딩 중 placeholder */
-    .chart-card img.loading {
-      filter: blur(0);
-      animation: pulse 1.5s ease-in-out infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 0.4; }
-      50%       { opacity: 0.8; }
-    }
+    .chart-card img { width: 100%; display: block; background: var(--surface2); min-height: 160px; }
 
-    /* ── 로딩 스피너 ── */
+    /* ── 스피너 ── */
     .spinner {
       display: inline-block;
-      width: 18px; height: 18px;
+      width: 16px; height: 16px;
       border: 2px solid var(--border);
       border-top-color: var(--blue);
       border-radius: 50%;
-      animation: spin 0.7s linear infinite;
+      animation: spin .7s linear infinite;
       vertical-align: middle;
-      margin-right: 8px;
+      margin-right: 6px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ── 알림 배너 ── */
-    .notice {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-left: 4px solid var(--yellow);
-      border-radius: var(--radius);
-      padding: 14px 18px;
-      font-size: 0.85rem;
-      color: var(--muted);
-      margin-bottom: 32px;
-    }
 
     /* ── 푸터 ── */
     footer {
@@ -190,22 +169,20 @@
     footer a { color: var(--blue); text-decoration: none; }
     footer a:hover { text-decoration: underline; }
 
-    /* ── 반응형 ── */
     @media (max-width: 640px) {
       header { padding: 16px; }
       main   { padding: 20px 16px; }
-      .header-title h1 { font-size: 1.2rem; }
+      .header-left h1 { font-size: 1.2rem; }
       .stat-value { font-size: 1.5rem; }
     }
   </style>
 </head>
 <body>
 
-<!-- ── 헤더 ── -->
 <header>
-  <div class="header-title">
+  <div class="header-left">
     <h1>📈 4H 백테스트 대시보드</h1>
-    <span class="badge">Auto-Updated Daily</span>
+    <span class="badge">매일 09:00 KST 자동 업데이트</span>
   </div>
   <div id="update-info">
     <div class="label">마지막 업데이트</div>
@@ -213,23 +190,20 @@
   </div>
 </header>
 
-<!-- ── 메인 ── -->
 <main>
 
-  <!-- 공지 -->
   <div class="notice">
     ⚠️ 본 대시보드는 과거 데이터 기반 백테스트 결과입니다. 실제 투자 성과를 보장하지 않습니다.
-    매일 오전 09:00 KST에 자동 업데이트됩니다.
+    Binance 공개 API 기반, 매일 오전 09:00 KST 로컬에서 자동 실행됩니다.
   </div>
 
   <!-- 핵심 지표 -->
   <div class="section-title">핵심 지표 (Key Metrics)</div>
-  <div class="stats-grid" id="stats-grid">
-    <!-- JS로 채워짐 -->
+  <div class="stats-grid">
     <div class="stat-card blue">
       <div class="stat-label">Bitget 6coins · CAGR</div>
       <div class="stat-value positive" id="bitget-cagr"><span class="spinner"></span></div>
-      <div class="stat-sub">초기자본 $10,000</div>
+      <div class="stat-sub" id="bitget-capital">초기자본 로딩 중...</div>
     </div>
     <div class="stat-card blue">
       <div class="stat-label">Bitget 6coins · MDD</div>
@@ -244,7 +218,7 @@
     <div class="stat-card orange">
       <div class="stat-label">Binance Short+Long · CAGR</div>
       <div class="stat-value positive" id="binance-cagr"><span class="spinner"></span></div>
-      <div class="stat-sub">초기자본 $100,000</div>
+      <div class="stat-sub" id="binance-capital">초기자본 로딩 중...</div>
     </div>
     <div class="stat-card orange">
       <div class="stat-label">Binance Short+Long · MDD</div>
@@ -258,7 +232,7 @@
     </div>
   </div>
 
-  <!-- 요약 대시보드 -->
+  <!-- 요약 -->
   <div class="chart-section">
     <div class="section-title">요약 비교 (Summary)</div>
     <div class="chart-grid-2">
@@ -267,8 +241,8 @@
           <div class="dot blue"></div><div class="dot orange"></div>
           <span>CAGR / MDD / Sharpe 비교</span>
         </div>
-        <img id="img-summary" src="charts/summary.png" alt="Summary Dashboard"
-             onerror="this.style.opacity='0.3'; this.alt='차트 생성 후 표시됩니다 (첫 실행 필요)';" />
+        <img src="charts/summary.png?t=__CACHE_BUST__" alt="Summary Dashboard"
+             onerror="this.style.opacity='.3';" />
       </div>
     </div>
   </div>
@@ -282,8 +256,8 @@
           <div class="dot blue"></div><div class="dot orange"></div>
           <span>포트폴리오 에쿼티 커브 (로그 스케일) + 드로다운</span>
         </div>
-        <img id="img-equity" src="charts/equity_drawdown.png" alt="Equity &amp; Drawdown"
-             onerror="this.style.opacity='0.3'; this.alt='차트 생성 후 표시됩니다';" />
+        <img src="charts/equity_drawdown.png?t=__CACHE_BUST__" alt="Equity &amp; Drawdown"
+             onerror="this.style.opacity='.3';" />
       </div>
     </div>
   </div>
@@ -297,31 +271,31 @@
           <div class="dot purple"></div>
           <span>롤링 샤프 비율 (90일) + 롤링 변동성 (연환산)</span>
         </div>
-        <img id="img-rolling" src="charts/rolling_risk.png" alt="Rolling Risk"
-             onerror="this.style.opacity='0.3'; this.alt='차트 생성 후 표시됩니다';" />
+        <img src="charts/rolling_risk.png?t=__CACHE_BUST__" alt="Rolling Risk"
+             onerror="this.style.opacity='.3';" />
       </div>
     </div>
   </div>
 
   <!-- 월별 히트맵 -->
   <div class="chart-section">
-    <div class="section-title">월별 수익률 히트맵 (Monthly Returns Heatmap)</div>
+    <div class="section-title">월별 수익률 히트맵 (Monthly Returns)</div>
     <div class="chart-grid-2">
       <div class="chart-card">
         <div class="chart-card-header">
           <div class="dot blue"></div>
           <span>Bitget 6coins — 월별 수익률</span>
         </div>
-        <img id="img-bitget-monthly" src="charts/bitget_monthly.png" alt="Bitget Monthly Heatmap"
-             onerror="this.style.opacity='0.3'; this.alt='차트 생성 후 표시됩니다';" />
+        <img src="charts/bitget_monthly.png?t=__CACHE_BUST__" alt="Bitget Monthly Heatmap"
+             onerror="this.style.opacity='.3';" />
       </div>
       <div class="chart-card">
         <div class="chart-card-header">
           <div class="dot orange"></div>
           <span>Binance Short+Long — 월별 수익률</span>
         </div>
-        <img id="img-binance-monthly" src="charts/binance_monthly.png" alt="Binance Monthly Heatmap"
-             onerror="this.style.opacity='0.3'; this.alt='차트 생성 후 표시됩니다';" />
+        <img src="charts/binance_monthly.png?t=__CACHE_BUST__" alt="Binance Monthly Heatmap"
+             onerror="this.style.opacity='.3';" />
       </div>
     </div>
   </div>
@@ -335,8 +309,8 @@
           <div class="dot green"></div>
           <span>연도별 수익률 바차트</span>
         </div>
-        <img id="img-yearly" src="charts/yearly_comparison.png" alt="Yearly Comparison"
-             onerror="this.style.opacity='0.3'; this.alt='차트 생성 후 표시됩니다';" />
+        <img src="charts/yearly_comparison.png?t=__CACHE_BUST__" alt="Yearly Comparison"
+             onerror="this.style.opacity='.3';" />
       </div>
     </div>
   </div>
@@ -346,91 +320,78 @@
 <footer>
   <p>
     자동 백테스트 대시보드 — Binance 공개 API 데이터 기반 |
-    매일 KST 09:00 자동 업데이트 (GitHub Actions) |
-    <a href="https://github.com" target="_blank" rel="noopener">GitHub</a>
+    매일 KST 09:00 로컬 자동 실행 |
+    <a href="https://github.com/gisukkim/backtest-dashboard" target="_blank" rel="noopener">GitHub</a>
   </p>
-  <p style="margin-top:6px; color: #4a5568;">
-    ※ 백테스트 결과는 미래 수익을 보장하지 않습니다.
-  </p>
+  <p style="margin-top:6px;">※ 백테스트 결과는 미래 수익을 보장하지 않습니다.</p>
 </footer>
 
-<!-- ── JavaScript: metrics.json 로드 ── -->
 <script>
-  (function () {
-    const METRICS_URL = 'data/metrics.json';
+(function () {
+  // 이미지 캐시 버스팅: 현재 날짜(YYYYMMDD)로 교체
+  const today = new Date().toISOString().slice(0,10).replace(/-/g,'');
+  document.querySelectorAll('img[src*="__CACHE_BUST__"]').forEach(img => {
+    img.src = img.src.replace('__CACHE_BUST__', today);
+  });
 
-    function fmt(val, suffix, forceSign) {
-      if (val == null) return '—';
-      const sign = (forceSign && val > 0) ? '+' : '';
-      return sign + val + suffix;
-    }
+  function fmt(val, suffix, forceSign) {
+    if (val == null) return '—';
+    const sign = (forceSign && val > 0) ? '+' : '';
+    return sign + val + suffix;
+  }
+  function colorClass(val, invertRed) {
+    if (val == null) return 'neutral';
+    if (invertRed) return val < 0 ? 'positive' : 'negative';
+    return val >= 0 ? 'positive' : 'negative';
+  }
+  function setEl(id, text, cls) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = text;
+    el.className = 'stat-value ' + (cls || 'neutral');
+  }
+  function fmtCapital(val) {
+    if (!val) return '';
+    return '초기자본 $' + Number(val).toLocaleString();
+  }
 
-    function colorClass(val, invertRed) {
-      if (val == null) return 'neutral';
-      if (invertRed) return val < 0 ? 'positive' : 'negative'; // MDD: 음수가 좋음
-      return val >= 0 ? 'positive' : 'negative';
-    }
+  async function loadMetrics() {
+    try {
+      const res = await fetch('data/metrics.json?t=' + Date.now());
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const m = await res.json();
 
-    function setEl(id, text, cls) {
-      const el = document.getElementById(id);
-      if (!el) return;
-      el.textContent = text;
-      el.className = 'stat-value ' + (cls || 'neutral');
-    }
+      document.getElementById('last-updated').textContent =
+        m.updated_at_kst || m.updated_at_utc || '알 수 없음';
+      if (m.backtest_end_date)
+        document.title = '4H 백테스트 (' + m.backtest_end_date + ')';
 
-    async function loadMetrics() {
-      try {
-        // 캐시 방지를 위해 타임스탬프 쿼리 추가
-        const res = await fetch(METRICS_URL + '?t=' + Date.now());
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const m = await res.json();
+      const b = m.bitget;
+      setEl('bitget-cagr',   fmt(b.cagr,   '%', true), colorClass(b.cagr, false));
+      setEl('bitget-mdd',    fmt(b.mdd,    '%', false), colorClass(b.mdd,  true));
+      setEl('bitget-sharpe', fmt(b.sharpe, '',  false), b.sharpe >= 1 ? 'positive' : 'neutral');
+      const bc = document.getElementById('bitget-capital');
+      if (bc) bc.textContent = fmtCapital(b.capital);
 
-        // 업데이트 시간
-        document.getElementById('last-updated').textContent =
-          m.updated_at_kst || m.updated_at_utc || '알 수 없음';
+      const n = m.binance;
+      setEl('binance-cagr',   fmt(n.cagr,   '%', true), colorClass(n.cagr, false));
+      setEl('binance-mdd',    fmt(n.mdd,    '%', false), colorClass(n.mdd,  true));
+      setEl('binance-sharpe', fmt(n.sharpe, '',  false), n.sharpe >= 1 ? 'positive' : 'neutral');
+      const nc = document.getElementById('binance-capital');
+      if (nc) nc.textContent = fmtCapital(n.capital);
 
-        // Bitget
-        const b = m.bitget;
-        setEl('bitget-cagr',   fmt(b.cagr,   '%', true), colorClass(b.cagr,  false));
-        setEl('bitget-mdd',    fmt(b.mdd,    '%', false), colorClass(b.mdd,   true));
-        setEl('bitget-sharpe', fmt(b.sharpe, '',  false), b.sharpe >= 1 ? 'positive' : 'neutral');
-
-        // Binance
-        const n = m.binance;
-        setEl('binance-cagr',   fmt(n.cagr,   '%', true), colorClass(n.cagr,  false));
-        setEl('binance-mdd',    fmt(n.mdd,    '%', false), colorClass(n.mdd,   true));
-        setEl('binance-sharpe', fmt(n.sharpe, '',  false), n.sharpe >= 1 ? 'positive' : 'neutral');
-
-        // 페이지 타이틀
-        if (m.backtest_end_date) {
-          document.title = '4H 백테스트 (' + m.backtest_end_date + ')';
-        }
-
-      } catch (e) {
-        const el = document.getElementById('last-updated');
-        el.textContent = '⏳ 데이터 준비 중 (첫 실행 후 표시됩니다)';
-        console.warn('metrics.json 로드 실패:', e.message);
-        // 지표 셀 처리
-        ['bitget-cagr','bitget-mdd','bitget-sharpe',
-         'binance-cagr','binance-mdd','binance-sharpe'].forEach(id => {
-          const el = document.getElementById(id);
-          if (el) { el.textContent = '—'; el.className = 'stat-value neutral'; }
-        });
-      }
-    }
-
-    // 이미지 로드 실패 시 alt 텍스트를 오버레이로 표시
-    document.querySelectorAll('img').forEach(img => {
-      img.addEventListener('error', function () {
-        this.style.padding = '40px';
-        this.style.textAlign = 'center';
-        this.style.color = '#8892a4';
-        this.style.fontSize = '0.85rem';
+    } catch (e) {
+      document.getElementById('last-updated').textContent = '⏳ 데이터 준비 중...';
+      ['bitget-cagr','bitget-mdd','bitget-sharpe',
+       'binance-cagr','binance-mdd','binance-sharpe'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.textContent = '—'; el.className = 'stat-value neutral'; }
       });
-    });
+    }
+  }
 
-    loadMetrics();
-  })();
+  loadMetrics();
+})();
 </script>
 
 </body>
