@@ -1,13 +1,13 @@
 {
-  "updated_at_kst": "2026-04-24 09:07 KST",
-  "updated_at_utc": "2026-04-24 00:07 UTC",
+  "updated_at_kst": "2026-04-25 09:01 KST",
+  "updated_at_utc": "2026-04-25 00:01 UTC",
   "backtest_end_date": "2026-04-20",
   "bitget": {
     "name": "Bitget 6coins",
     "capital": 100000.0,
-    "cagr": 1257.6,
-    "mdd": -53.2,
-    "sharpe": 2.872
+    "cagr": 1912.2,
+    "mdd": -47.1,
+    "sharpe": 3.156
   },
   "binance": {
     "name": "Binance Short+Long",
